@@ -12,6 +12,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.xebia.trainings.bookstore.cart.ShoppingCart;
+import org.xebia.trainings.bookstore.coupon.InMemoryDiscountService;
 import org.xebia.trainings.bookstore.inventory.internal.InMemoryInventory;
 import org.xebia.trainings.bookstore.model.Book;
 import org.xebia.trainings.bookstore.model.DiscountCoupon;
@@ -23,15 +24,18 @@ public class BookstoreTest {
 
 	private ShoppingCart cart;
 
-	private InMemoryInventory inventory; 
+	private InMemoryInventory inventory;
+
+	private InMemoryDiscountService discountService; 
 
 	@Before
 	public void createShoppingCart(){
 		inventory = new InMemoryInventory();
+		discountService = new InMemoryDiscountService();
 		inventory.add(new Book("Effective Java", 40, 10));
 		inventory.add(new Book("Clean Code", 60, 10));
 		inventory.add(new Book("Head First Java", 30, 10));
-		cart = new ShoppingCart(inventory);
+		cart = new ShoppingCart(inventory,discountService);
 	}
 	
 	@Test
@@ -146,7 +150,10 @@ public class BookstoreTest {
 
 		Date start = new Date();
 		Date end = new Date(start.getTime() + 24L * 60 * 60 * 1000);
-		int amount = cart.checkout(new DiscountCoupon(20, start, end));
+		
+		String couponCode = discountService.create(new DiscountCoupon(20, start, end));
+		
+		int amount = cart.checkout(couponCode);
 		
 		assertThat(amount, is(equalTo(208)));
 	}

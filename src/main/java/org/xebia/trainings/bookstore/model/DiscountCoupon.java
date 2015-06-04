@@ -4,6 +4,8 @@ import java.util.Date;
 
 public class DiscountCoupon {
 
+	private String couponCode;
+	
 	private int percentageDiscount;
 	private Date start;
 	private Date end;
@@ -28,6 +30,14 @@ public class DiscountCoupon {
 
 	public boolean isExpired() {
 		return end.before(new Date());
+	}
+
+	public String getCouponCode() {
+		return couponCode;
+	}
+	
+	public void setCouponCode(String couponCode) {
+		this.couponCode = couponCode;
 	}
 
 }

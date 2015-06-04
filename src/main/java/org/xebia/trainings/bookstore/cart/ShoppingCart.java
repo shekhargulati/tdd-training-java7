@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.xebia.trainings.bookstore.cart.exceptions.EmptyShoppingCartException;
+import org.xebia.trainings.bookstore.coupon.DiscountService;
 import org.xebia.trainings.bookstore.coupon.ExpiredDisountCouponException;
 import org.xebia.trainings.bookstore.inventory.Inventory;
 import org.xebia.trainings.bookstore.inventory.exceptions.BookNotInInventoryException;
@@ -18,11 +19,14 @@ import org.xebia.trainings.bookstore.model.DiscountCoupon;
 public class ShoppingCart {
 
 	private Inventory inventory;
+	private DiscountService discountService;
 
 	private Map<String, Integer> itemsInCart = new LinkedHashMap<>();
 
-	public ShoppingCart(Inventory inventory) {
+
+	public ShoppingCart(Inventory inventory, DiscountService discountService) {
 		this.inventory = inventory;
+		this.discountService = discountService;
 	}
 
 	public void add(String book) {
@@ -63,7 +67,8 @@ public class ShoppingCart {
 		return size() == 0;
 	}
 
-	public int checkout(final DiscountCoupon coupon) {
+	public int checkout(final String couponCode) {
+		DiscountCoupon coupon = discountService.find(couponCode);
 		if (coupon.isExpired()) {
 			throw new ExpiredDisountCouponException();
 		}
