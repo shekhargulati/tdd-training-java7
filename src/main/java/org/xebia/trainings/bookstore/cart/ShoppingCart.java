@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import org.xebia.trainings.bookstore.cart.exceptions.EmptyShoppingCartException;
 import org.xebia.trainings.bookstore.inventory.Inventory;
 import org.xebia.trainings.bookstore.inventory.exceptions.BookNotInInventoryException;
+import org.xebia.trainings.bookstore.inventory.exceptions.NotEnoughBooksInInventoryException;
 import org.xebia.trainings.bookstore.model.Book;
 
 public class ShoppingCart {
@@ -29,6 +30,9 @@ public class ShoppingCart {
 	public void add(String book, int quantity) {
 		if (!inventory.exists(book)) {
 			throw new BookNotInInventoryException(book);
+		}
+		if(!inventory.hasEnoughCopies(book, quantity)){
+			throw new NotEnoughBooksInInventoryException(book);
 		}
 		if (itemsInCart.containsKey(book)) {
 			itemsInCart.put(book, itemsInCart.get(book) + quantity);

@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -21,6 +22,7 @@ import org.junit.rules.ExpectedException;
 import org.xebia.trainings.bookstore.cart.exceptions.EmptyShoppingCartException;
 import org.xebia.trainings.bookstore.inventory.Inventory;
 import org.xebia.trainings.bookstore.inventory.exceptions.BookNotInInventoryException;
+import org.xebia.trainings.bookstore.inventory.exceptions.NotEnoughBooksInInventoryException;
 import org.xebia.trainings.bookstore.model.Book;
 
 public class ShoppingCartTest {
@@ -56,12 +58,14 @@ public class ShoppingCartTest {
 	@Test
 	public void cartWithSizeOneWhenOneBookIsAddedToTheShoppingCart() throws Exception {
 		when(inventory.exists("Effective Java")).thenReturn(true);
+		when(inventory.hasEnoughCopies("Effective Java", 1)).thenReturn(true);
 
 		cart.add(effectiveJava);
 
 		assertThat(cart.size(), is(equalTo(1)));
 
 		verify(inventory, times(1)).exists("Effective Java");
+		verify(inventory, times(1)).hasEnoughCopies("Effective Java", 1);
 		verifyNoMoreInteractions(inventory);
 	}
 
@@ -70,11 +74,15 @@ public class ShoppingCartTest {
 		when(inventory.exists("Effective Java")).thenReturn(true);
 		when(inventory.exists("Clean Code")).thenReturn(true);
 
+		when(inventory.hasEnoughCopies("Effective Java", 1)).thenReturn(true);
+		when(inventory.hasEnoughCopies("Clean Code", 1)).thenReturn(true);
+
 		cart.add(effectiveJava);
 		cart.add(cleanCode);
 
 		assertThat(cart.size(), is(equalTo(2)));
 		verify(inventory, times(2)).exists(anyString());
+		verify(inventory, times(2)).hasEnoughCopies(anyString(), anyInt());
 		verifyNoMoreInteractions(inventory);
 	}
 
@@ -85,16 +93,21 @@ public class ShoppingCartTest {
 		when(inventory.exists("Clean Code")).thenReturn(true);
 		when(inventory.exists("Head First Java")).thenReturn(true);
 
+		when(inventory.hasEnoughCopies("Effective Java", 1)).thenReturn(true);
+		when(inventory.hasEnoughCopies("Clean Code", 1)).thenReturn(true);
+		when(inventory.hasEnoughCopies("Head First Java", 1)).thenReturn(true);
+
 		cart.add(effectiveJava);
 		cart.add(cleanCode);
 		cart.add(headFirstJava);
+		verify(inventory, times(3)).hasEnoughCopies(anyString(), anyInt());
 
-		when(inventory.find(effectiveJava)).thenReturn(new Book(effectiveJava, 40));
-		when(inventory.find(cleanCode)).thenReturn(new Book(cleanCode, 60));
-		when(inventory.find(headFirstJava)).thenReturn(new Book(headFirstJava, 30));
-		
+		when(inventory.find(effectiveJava)).thenReturn(effectiveJavaBook());
+		when(inventory.find(cleanCode)).thenReturn(cleanCodeBook());
+		when(inventory.find(headFirstJava)).thenReturn(headFirstJavaBook());
+
 		List<Book> items = cart.items();
-		
+
 		assertEquals(effectiveJava, items.get(0).getTitle());
 		assertEquals(cleanCode, items.get(1).getTitle());
 		assertEquals(headFirstJava, items.get(2).getTitle());
@@ -110,13 +123,18 @@ public class ShoppingCartTest {
 		when(inventory.exists("Clean Code")).thenReturn(true);
 		when(inventory.exists("Head First Java")).thenReturn(true);
 
+		when(inventory.hasEnoughCopies("Effective Java", 1)).thenReturn(true);
+		when(inventory.hasEnoughCopies("Clean Code", 1)).thenReturn(true);
+		when(inventory.hasEnoughCopies("Head First Java", 1)).thenReturn(true);
+
 		cart.add(effectiveJava);
 		cart.add(cleanCode);
 		cart.add(headFirstJava);
+		verify(inventory, times(3)).hasEnoughCopies(anyString(), anyInt());
 
-		when(inventory.find(effectiveJava)).thenReturn(new Book(effectiveJava, 40));
-		when(inventory.find(cleanCode)).thenReturn(new Book(cleanCode, 60));
-		when(inventory.find(headFirstJava)).thenReturn(new Book(headFirstJava, 30));
+		when(inventory.find(effectiveJava)).thenReturn(effectiveJavaBook());
+		when(inventory.find(cleanCode)).thenReturn(cleanCodeBook());
+		when(inventory.find(headFirstJava)).thenReturn(headFirstJavaBook());
 
 		int amount = cart.checkout();
 
@@ -138,10 +156,12 @@ public class ShoppingCartTest {
 	@Test
 	public void checkoutAmountEqualsToBookPriceWhenOneCopyOfBookAddedToCart() throws Exception {
 		when(inventory.exists("Effective Java")).thenReturn(true);
+		when(inventory.hasEnoughCopies("Effective Java", 1)).thenReturn(true);
 
 		cart.add(effectiveJava, 1);
-		
-		when(inventory.find(effectiveJava)).thenReturn(new Book(effectiveJava, 40));
+		verify(inventory, times(1)).hasEnoughCopies(anyString(), anyInt());
+
+		when(inventory.find(effectiveJava)).thenReturn(effectiveJavaBook());
 
 		int amount = cart.checkout();
 
@@ -154,11 +174,13 @@ public class ShoppingCartTest {
 	@Test
 	public void checkoutAmountEqualsToBookPriceTimeNumberOfCopiesOfBooksInCartWhenMultipleCopiesOfBookAddedToCart() throws Exception {
 		when(inventory.exists("Effective Java")).thenReturn(true);
+		when(inventory.hasEnoughCopies("Effective Java", 3)).thenReturn(true);
 
 		cart.add(effectiveJava, 3);
+		verify(inventory, times(1)).hasEnoughCopies(anyString(), anyInt());
 
-		when(inventory.find(effectiveJava)).thenReturn(new Book(effectiveJava, 40));
-		
+		when(inventory.find(effectiveJava)).thenReturn(effectiveJavaBook());
+
 		int amount = cart.checkout();
 
 		assertThat(amount, is(equalTo(120)));
@@ -171,8 +193,12 @@ public class ShoppingCartTest {
 	public void cartSizeIsTotalNumberOfCopiesAddedToCart() throws Exception {
 		when(inventory.exists("Effective Java")).thenReturn(true);
 
+		when(inventory.hasEnoughCopies("Effective Java", 1)).thenReturn(true);
+
 		cart.add(effectiveJava, 1);
 		cart.add(effectiveJava, 1);
+		
+		verify(inventory, times(2)).hasEnoughCopies(anyString(), anyInt());
 
 		int size = cart.size();
 
@@ -197,4 +223,32 @@ public class ShoppingCartTest {
 		verify(inventory, times(1)).exists("Effective Java");
 		verifyNoMoreInteractions(inventory);
 	}
+
+	@Test
+	public void throwExceptionWhenMoreItemsAreAddedToTheCartThanAvailableInInventory() throws Exception {
+		when(inventory.exists("OpenShift Cookbook")).thenReturn(true);
+		when(inventory.hasEnoughCopies("OpenShift Cookbook", 5)).thenReturn(false);
+
+		expectedException.expect(NotEnoughBooksInInventoryException.class);
+		expectedException.expectMessage(is(equalTo("There are not enough copies of 'OpenShift Cookbook' in the inventory.")));
+
+		cart.add("OpenShift Cookbook", 5);
+
+		verify(inventory, times(1)).exists("OpenShift Cookbook");
+		verify(inventory, times(1)).hasEnoughCopies("OpenShift Cookbook", 5);
+		verifyNoMoreInteractions(inventory);
+	}
+
+	private Book headFirstJavaBook() {
+		return new Book(headFirstJava, 30, 10);
+	}
+
+	private Book cleanCodeBook() {
+		return new Book(cleanCode, 60, 10);
+	}
+
+	private Book effectiveJavaBook() {
+		return new Book(effectiveJava, 40, 10);
+	}
+
 }

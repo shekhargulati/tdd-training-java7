@@ -4,10 +4,12 @@ public class Book {
 
 	private String title;
 	private int price;
+	private int quantity;
 
-	public Book(String title, int price) {
+	public Book(String title, int price, int quantity) {
 		this.title = title;
 		this.price = price;
+		this.quantity = quantity;
 	}
 
 	public String getTitle() {
@@ -16,6 +18,10 @@ public class Book {
 
 	public int getPrice() {
 		return price;
+	}
+	
+	public int getQuantity() {
+		return quantity;
 	}
 
 	@Override

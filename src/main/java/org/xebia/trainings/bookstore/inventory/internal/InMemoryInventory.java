@@ -25,4 +25,9 @@ public class InMemoryInventory implements Inventory {
 		return inventory.get(title);
 	}
 
+	@Override
+	public boolean hasEnoughCopies(String title, int quantity) {
+		return inventory.get(title).getQuantity() >= quantity;
+	}
+
 }

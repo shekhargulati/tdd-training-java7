@@ -17,14 +17,16 @@ public class BookstoreTest {
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
-	private ShoppingCart cart; 
+	private ShoppingCart cart;
+
+	private InMemoryInventory inventory; 
 
 	@Before
 	public void createShoppingCart(){
-		InMemoryInventory inventory = new InMemoryInventory();
-		inventory.add(new Book("Effective Java", 40));
-		inventory.add(new Book("Clean Code", 60));
-		inventory.add(new Book("Head First Java", 30));
+		inventory = new InMemoryInventory();
+		inventory.add(new Book("Effective Java", 40, 10));
+		inventory.add(new Book("Clean Code", 60, 10));
+		inventory.add(new Book("Head First Java", 30, 10));
 		cart = new ShoppingCart(inventory);
 	}
 	
@@ -114,4 +116,17 @@ public class BookstoreTest {
 		cart.add("TDD in Action");
 	}
 	
+	/*
+	 * As a user
+	 * I want to be notified when I add more copies than available in inventory
+	 */
+	
+	@Test
+	public void givenOnlyTwoCopiesOfABookInTheInventory_WhenUserAddMoreThanTwoCopiesOfThatBookInTheCart_ThenErrorMessageShouldBeShownToTheUser() throws Exception {
+		inventory.add(new Book("TDD in Action", 40, 2));
+		
+		expectedException.expectMessage(is(equalTo("There are not enough copies of 'TDD in Action' in the inventory.")));
+
+		cart.add("TDD in Action", 5);
+	}
 }
