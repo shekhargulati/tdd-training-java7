@@ -2,6 +2,7 @@ package org.xebia.trainings.bookstore.cart;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Before;
@@ -20,10 +22,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.xebia.trainings.bookstore.cart.exceptions.EmptyShoppingCartException;
+import org.xebia.trainings.bookstore.coupon.ExpiredDisountCouponException;
 import org.xebia.trainings.bookstore.inventory.Inventory;
 import org.xebia.trainings.bookstore.inventory.exceptions.BookNotInInventoryException;
 import org.xebia.trainings.bookstore.inventory.exceptions.NotEnoughBooksInInventoryException;
 import org.xebia.trainings.bookstore.model.Book;
+import org.xebia.trainings.bookstore.model.DiscountCoupon;
 
 public class ShoppingCartTest {
 
@@ -197,7 +201,7 @@ public class ShoppingCartTest {
 
 		cart.add(effectiveJava, 1);
 		cart.add(effectiveJava, 1);
-		
+
 		verify(inventory, times(2)).hasEnoughCopies(anyString(), anyInt());
 
 		int size = cart.size();
@@ -237,6 +241,57 @@ public class ShoppingCartTest {
 		verify(inventory, times(1)).exists("OpenShift Cookbook");
 		verify(inventory, times(1)).hasEnoughCopies("OpenShift Cookbook", 5);
 		verifyNoMoreInteractions(inventory);
+	}
+
+	@Test
+	public void applyDiscountWhenAValidDisountCouponIsUsedDuringCheckout() throws Exception {
+		when(inventory.exists(anyString())).thenReturn(true);
+		when(inventory.hasEnoughCopies(effectiveJava, 3)).thenReturn(true);
+		when(inventory.hasEnoughCopies(cleanCode, 2)).thenReturn(true);
+
+		cart.add(effectiveJava, 3);
+		cart.add(cleanCode, 2);
+
+		verify(inventory, times(2)).exists(anyString());
+
+		when(inventory.find(effectiveJava)).thenReturn(effectiveJavaBook());
+		when(inventory.find(cleanCode)).thenReturn(cleanCodeBook());
+
+		Date start = new Date();
+		Date end = new Date(start.getTime() + 24L * 60 * 60 * 1000);
+		int cartAmount = cart.checkout(new DiscountCoupon(20, start, end));
+
+		assertThat(cartAmount, is(equalTo(192)));
+
+		verify(inventory, times(2)).find(anyString());
+		verify(inventory, times(1)).hasEnoughCopies(effectiveJava, 3);
+		verify(inventory, times(1)).hasEnoughCopies(cleanCode, 2);
+		verifyNoMoreInteractions(inventory);
+	}
+
+	@Test
+	public void throwExceptionWhenExpiredDisountCouponIsUsedDuringCheckout() throws Exception {
+		when(inventory.exists(anyString())).thenReturn(true);
+		when(inventory.hasEnoughCopies(effectiveJava, 3)).thenReturn(true);
+		when(inventory.hasEnoughCopies(cleanCode, 2)).thenReturn(true);
+
+		cart.add(effectiveJava, 3);
+		cart.add(cleanCode, 2);
+
+		verify(inventory, times(2)).exists(anyString());
+
+		when(inventory.find(effectiveJava)).thenReturn(effectiveJavaBook());
+		when(inventory.find(cleanCode)).thenReturn(cleanCodeBook());
+
+		Date start = new Date();
+		Date end = new Date(start.getTime() - 24L * 60 * 60 * 1000);
+		
+		expectedException.expect(isA(ExpiredDisountCouponException.class));
+		expectedException.expectMessage(is(equalTo("Sorry, the coupon code has expired.")));
+		
+		cart.checkout(new DiscountCoupon(20, start, end));
+
+
 	}
 
 	private Book headFirstJavaBook() {

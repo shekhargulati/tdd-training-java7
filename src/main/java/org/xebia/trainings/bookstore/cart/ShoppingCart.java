@@ -8,10 +8,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.xebia.trainings.bookstore.cart.exceptions.EmptyShoppingCartException;
+import org.xebia.trainings.bookstore.coupon.ExpiredDisountCouponException;
 import org.xebia.trainings.bookstore.inventory.Inventory;
 import org.xebia.trainings.bookstore.inventory.exceptions.BookNotInInventoryException;
 import org.xebia.trainings.bookstore.inventory.exceptions.NotEnoughBooksInInventoryException;
 import org.xebia.trainings.bookstore.model.Book;
+import org.xebia.trainings.bookstore.model.DiscountCoupon;
 
 public class ShoppingCart {
 
@@ -31,7 +33,7 @@ public class ShoppingCart {
 		if (!inventory.exists(book)) {
 			throw new BookNotInInventoryException(book);
 		}
-		if(!inventory.hasEnoughCopies(book, quantity)){
+		if (!inventory.hasEnoughCopies(book, quantity)) {
 			throw new NotEnoughBooksInInventoryException(book);
 		}
 		if (itemsInCart.containsKey(book)) {
@@ -39,17 +41,6 @@ public class ShoppingCart {
 		} else {
 			itemsInCart.put(book, quantity);
 		}
-	}
-
-	public int checkout() {
-		if (isEmpty()) {
-			throw new EmptyShoppingCartException();
-		}
-		int checkoutAmount = 0;
-		for (Entry<String, Integer> entry : itemsInCart.entrySet()) {
-			checkoutAmount += inventory.find(entry.getKey()).getPrice() * entry.getValue();
-		}
-		return checkoutAmount;
 	}
 
 	public int size() {
@@ -72,4 +63,23 @@ public class ShoppingCart {
 		return size() == 0;
 	}
 
+	public int checkout(final DiscountCoupon coupon) {
+		if (coupon.isExpired()) {
+			throw new ExpiredDisountCouponException();
+		}
+		int checkoutAmount = checkout();
+		return checkoutAmount - (checkoutAmount * coupon.getPercentageDiscount()) / 100;
+
+	}
+
+	public int checkout() {
+		if (isEmpty()) {
+			throw new EmptyShoppingCartException();
+		}
+		int checkoutAmount = 0;
+		for (Entry<String, Integer> entry : itemsInCart.entrySet()) {
+			checkoutAmount += inventory.find(entry.getKey()).getPrice() * entry.getValue();
+		}
+		return checkoutAmount;
+	}
 }

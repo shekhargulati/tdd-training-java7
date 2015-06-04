@@ -2,7 +2,10 @@ package org.xebia.trainings.bookstore;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Date;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -11,6 +14,7 @@ import org.junit.rules.ExpectedException;
 import org.xebia.trainings.bookstore.cart.ShoppingCart;
 import org.xebia.trainings.bookstore.inventory.internal.InMemoryInventory;
 import org.xebia.trainings.bookstore.model.Book;
+import org.xebia.trainings.bookstore.model.DiscountCoupon;
 
 public class BookstoreTest {
 
@@ -129,4 +133,22 @@ public class BookstoreTest {
 
 		cart.add("TDD in Action", 5);
 	}
+	
+	/*
+	 * As a marketing manager
+	 * I want to create flat percentage discount coupons
+	 * So that users can apply them during checkout and get discounted checkout price and sales improve
+	 */
+	@Test
+	public void givenCustomerHasValidFlatPercentageDiscountCoupon_WhenCustomerAppliesTheCouponDuringCheckout_ThenDiscountIsAppliedToCheckoutAmount() throws Exception {
+		cart.add("Effective Java", 2);
+		cart.add("Clean Code", 3);
+
+		Date start = new Date();
+		Date end = new Date(start.getTime() + 24L * 60 * 60 * 1000);
+		int amount = cart.checkout(new DiscountCoupon(20, start, end));
+		
+		assertThat(amount, is(equalTo(208)));
+	}
+	
 }
