@@ -56,14 +56,4 @@ public class BookstoreTest {
 		cart.checkout();
 	}
 	
-	/*
-	 * As a customer
-	 * I want the ability to add multiple copies of a book to the shopping cart
-	 * So that I can do bulk checkout of a book
-	 */
-
-	@Test
-	public void given() throws Exception {
-		
-	}
 }
