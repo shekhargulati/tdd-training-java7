@@ -50,11 +50,20 @@ public class BookstoreTest {
 	}
 	
 	@Test
-	public void givenBookInventory_WhenUserCheckoutABookThatDoesNotExistInInventory_ThenExceptionIsThrown() throws Exception {
+	public void whenUserCheckoutABookThatDoesNotExistInInventory_ThenExceptionIsThrown() throws Exception {
 		expectedException.expectMessage(equalTo("You can't checkout an empty cart!!"));
 		
 		cart.checkout();
 	}
-
 	
+	/*
+	 * As a customer
+	 * I want the ability to add multiple copies of a book to the shopping cart
+	 * So that I can do bulk checkout of a book
+	 */
+
+	@Test
+	public void given() throws Exception {
+		
+	}
 }
