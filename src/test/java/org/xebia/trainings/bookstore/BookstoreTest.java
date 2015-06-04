@@ -11,13 +11,12 @@ import org.xebia.trainings.bookstore.cart.ShoppingCart;
 import org.xebia.trainings.bookstore.model.Book;
 
 public class BookstoreTest {
-	
-	
+
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
-	
+
 	private ShoppingCart cart = new ShoppingCart();
-	
+
 	@Test
 	public void projectInitialSetupShouldWork() {
 		assertTrue("project dependency should be met.", true);
@@ -48,12 +47,47 @@ public class BookstoreTest {
 
 		assertThat(amount, is(equalTo(130)));
 	}
-	
+
 	@Test
 	public void whenUserCheckoutABookThatDoesNotExistInInventory_ThenExceptionIsThrown() throws Exception {
 		expectedException.expectMessage(equalTo("You can't checkout an empty cart!!"));
-		
+
 		cart.checkout();
 	}
 	
+	/*
+	 * As a customer
+	 * I want the ability to add multiple copies of a book to the shopping cart
+	 * So that I can do bulk checkout of a book
+	 */
+
+	@Test
+	public void givenCartHasThreeCopiesOfABook_WhenCustomerCheckout_ThenCheckoutAmountIsThreeTimesBookPrice() throws Exception {
+		cart.add(new Book("Effective Java", 40), 3);
+
+		int amount = cart.checkout();
+
+		assertThat(amount, is(equalTo(120)));
+	}
+
+	@Test
+	public void givenCartHas2CopiesOfA3CopiesOfBAnd4CopiesOfC_WhenCustomerCheckout_ThenCheckoutAmountIsSumOfAllBookCopyPrices() throws Exception {
+		cart.add(new Book("Effective Java", 40), 2);
+		cart.add(new Book("Clean Code", 60), 3);
+		cart.add(new Book("Head First Java", 30), 4);
+
+		int amount = cart.checkout();
+
+		assertThat(amount, is(equalTo(380)));
+	}
+
+	@Test
+	public void givenThatCartHasOneCopyOfBook_WhenCustomerAddTwoCopiesOfTheSameBookToCartAndCheckout_ThenCheckoutAmountIsThreeTimesBookPrice() throws Exception {
+		cart.add(new Book("Effective Java", 40));
+		cart.add(new Book("Effective Java", 40), 2);
+
+		int amount = cart.checkout();
+
+		assertThat(amount, is(equalTo(120)));
+	}
 }
