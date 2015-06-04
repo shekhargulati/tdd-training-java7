@@ -15,7 +15,8 @@ import org.xebia.trainings.bookstore.cart.ShoppingCart;
 import org.xebia.trainings.bookstore.coupon.InMemoryDiscountService;
 import org.xebia.trainings.bookstore.inventory.internal.InMemoryInventory;
 import org.xebia.trainings.bookstore.model.Book;
-import org.xebia.trainings.bookstore.model.DiscountCoupon;
+import org.xebia.trainings.bookstore.model.CashDiscountCoupon;
+import org.xebia.trainings.bookstore.model.PercentageDiscountCoupon;
 
 public class BookstoreTest {
 
@@ -148,14 +149,58 @@ public class BookstoreTest {
 		cart.add("Effective Java", 2);
 		cart.add("Clean Code", 3);
 
-		Date start = new Date();
-		Date end = new Date(start.getTime() + 24L * 60 * 60 * 1000);
-		
-		String couponCode = discountService.create(new DiscountCoupon(20, start, end));
+		String couponCode = createFlatPercentageDiscountCoupon(20);
 		
 		int amount = cart.checkout(couponCode);
 		
 		assertThat(amount, is(equalTo(208)));
+	}
+	
+	/*
+	 * As a marketing manager
+	 * I want to create flat cash discount coupon
+	 * So that users can apply them during checkout and get discounted checkout price
+	 */
+	@Test
+	public void givenCustomerHasValidFlatCashDiscountCoupon_WhenCustomerAppliesTheCouponDuringCheckout_ThenCheckoutAmountIsReducedByFlatCashDiscountCouponAmount() throws Exception {
+		
+		cart.add("Effective Java", 2);
+		cart.add("Clean Code", 3);
+		
+		String couponCode = createFlatCashDiscountCoupon(20);
+		
+		int amount = cart.checkout(couponCode);
+		
+		assertThat(amount, is(equalTo(240)));
+	}
+	
+	@Test
+	public void givenCustomerHasValidFlatCashDiscountCoupon_WhenCheckoutAmountAfterApplyingDiscountCouponIsLessThan60PercentOfCheckoutAmount_ThenErrorMessageIsShownToTheUser() throws Exception {
+
+		cart.add("Effective Java", 1);
+
+		String couponCode = createFlatCashDiscountCoupon(30);
+		
+		expectedException.expectMessage(is(equalTo("This coupon is not applicable for this checkout amount.")));
+		
+		cart.checkout(couponCode);
+	}
+	
+	
+	private String createFlatCashDiscountCoupon(int amount) {
+		Date start = new Date();
+		Date end = new Date(start.getTime() + 24L * 60 * 60 * 1000);
+		
+		String couponCode = discountService.create(new CashDiscountCoupon(amount, start, end));
+		return couponCode;
+	}
+	
+	private String createFlatPercentageDiscountCoupon(int discount) {
+		Date start = new Date();
+		Date end = new Date(start.getTime() + 24L * 60 * 60 * 1000);
+		
+		String couponCode = discountService.create(new PercentageDiscountCoupon(discount, start, end));
+		return couponCode;
 	}
 	
 }

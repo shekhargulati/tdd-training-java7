@@ -73,7 +73,7 @@ public class ShoppingCart {
 			throw new ExpiredDisountCouponException();
 		}
 		int checkoutAmount = checkout();
-		return checkoutAmount - (checkoutAmount * coupon.getPercentageDiscount()) / 100;
+		return checkoutAmount - coupon.calculateDiscountAmount(checkoutAmount);
 
 	}
 

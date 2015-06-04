@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import java.util.Date;
 
 import org.junit.Test;
-import org.xebia.trainings.bookstore.model.DiscountCoupon;
+import org.xebia.trainings.bookstore.model.PercentageDiscountCoupon;
 
 public class DiscountServiceTest {
 
@@ -15,7 +15,7 @@ public class DiscountServiceTest {
 	public void createNewDiscountCouponWithUniqueCouponCode() {
 		Date start = new Date();
 		Date end = new Date(start.getTime() + 24L * 60 * 60 * 1000);
-		String couponCode = discountService.create(new DiscountCoupon(20, start, end));
+		String couponCode = discountService.create(new PercentageDiscountCoupon(20, start, end));
 		assertNotNull(couponCode);
 	}
 

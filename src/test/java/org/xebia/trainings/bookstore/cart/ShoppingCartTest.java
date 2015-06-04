@@ -29,7 +29,7 @@ import org.xebia.trainings.bookstore.inventory.Inventory;
 import org.xebia.trainings.bookstore.inventory.exceptions.BookNotInInventoryException;
 import org.xebia.trainings.bookstore.inventory.exceptions.NotEnoughBooksInInventoryException;
 import org.xebia.trainings.bookstore.model.Book;
-import org.xebia.trainings.bookstore.model.DiscountCoupon;
+import org.xebia.trainings.bookstore.model.PercentageDiscountCoupon;
 
 public class ShoppingCartTest {
 
@@ -266,7 +266,7 @@ public class ShoppingCartTest {
 		Date end = new Date(start.getTime() + 24L * 60 * 60 * 1000);
 		String couponCode = "valid_discount_coupon";
 
-		when(discountService.find(couponCode)).thenReturn(new DiscountCoupon(20, start, end));
+		when(discountService.find(couponCode)).thenReturn(new PercentageDiscountCoupon(20, start, end));
 		int cartAmount = cart.checkout(couponCode);
 
 
@@ -293,11 +293,12 @@ public class ShoppingCartTest {
 		when(inventory.find(effectiveJava)).thenReturn(effectiveJavaBook());
 		when(inventory.find(cleanCode)).thenReturn(cleanCodeBook());
 
-		Date start = new Date();
-		Date end = new Date(start.getTime() - 24L * 60 * 60 * 1000);
+		long now = new Date().getTime();
+		Date start = new Date(now - 2*24L * 60 * 60 * 1000);
+		Date end = new Date(now - 24L * 60 * 60 * 1000);
 		String couponCode = "expired_discount_coupon";
 
-		when(discountService.find(couponCode)).thenReturn(new DiscountCoupon(20, start, end));
+		when(discountService.find(couponCode)).thenReturn(new PercentageDiscountCoupon(20, start, end));
 		expectedException.expect(isA(ExpiredDisountCouponException.class));
 		expectedException.expectMessage(is(equalTo("Sorry, the coupon code has expired.")));
 		cart.checkout("expired_discount_coupon");
