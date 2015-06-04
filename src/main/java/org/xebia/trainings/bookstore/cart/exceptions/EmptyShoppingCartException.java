@@ -1,4 +1,4 @@
-package org.xebia.trainings.bookstore.exceptions;
+package org.xebia.trainings.bookstore.cart.exceptions;
 
 public class EmptyShoppingCartException extends RuntimeException {
 

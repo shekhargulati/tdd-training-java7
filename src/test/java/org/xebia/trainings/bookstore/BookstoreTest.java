@@ -4,10 +4,12 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.xebia.trainings.bookstore.cart.ShoppingCart;
+import org.xebia.trainings.bookstore.inventory.internal.InMemoryInventory;
 import org.xebia.trainings.bookstore.model.Book;
 
 public class BookstoreTest {
@@ -15,8 +17,17 @@ public class BookstoreTest {
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
-	private ShoppingCart cart = new ShoppingCart();
+	private ShoppingCart cart; 
 
+	@Before
+	public void createShoppingCart(){
+		InMemoryInventory inventory = new InMemoryInventory();
+		inventory.add(new Book("Effective Java", 40));
+		inventory.add(new Book("Clean Code", 60));
+		inventory.add(new Book("Head First Java", 30));
+		cart = new ShoppingCart(inventory);
+	}
+	
 	@Test
 	public void projectInitialSetupShouldWork() {
 		assertTrue("project dependency should be met.", true);
@@ -30,7 +41,7 @@ public class BookstoreTest {
 
 	@Test
 	public void givenCartHasOneBook_WhenCustomerCheckoutTheCart_ThenCheckoutAmountShouldBeEqualToBookActualPrice() throws Exception {
-		cart.add(new Book("Effective Java", 40));
+		cart.add("Effective Java");
 
 		int amount = cart.checkout();
 
@@ -39,9 +50,9 @@ public class BookstoreTest {
 
 	@Test
 	public void givenCartHasThreeBooks_WhenCustomerCheckoutTheCart_ThenCheckoutAmountIsEqualToSumOfAllBookPrices() throws Exception {
-		cart.add(new Book("Effective Java", 40));
-		cart.add(new Book("Clean Code", 60));
-		cart.add(new Book("Head First Java", 30));
+		cart.add("Effective Java");
+		cart.add("Clean Code");
+		cart.add("Head First Java");
 
 		int amount = cart.checkout();
 
@@ -63,7 +74,7 @@ public class BookstoreTest {
 
 	@Test
 	public void givenCartHasThreeCopiesOfABook_WhenCustomerCheckout_ThenCheckoutAmountIsThreeTimesBookPrice() throws Exception {
-		cart.add(new Book("Effective Java", 40), 3);
+		cart.add("Effective Java", 3);
 
 		int amount = cart.checkout();
 
@@ -72,9 +83,9 @@ public class BookstoreTest {
 
 	@Test
 	public void givenCartHas2CopiesOfA3CopiesOfBAnd4CopiesOfC_WhenCustomerCheckout_ThenCheckoutAmountIsSumOfAllBookCopyPrices() throws Exception {
-		cart.add(new Book("Effective Java", 40), 2);
-		cart.add(new Book("Clean Code", 60), 3);
-		cart.add(new Book("Head First Java", 30), 4);
+		cart.add("Effective Java", 2);
+		cart.add("Clean Code", 3);
+		cart.add("Head First Java", 4);
 
 		int amount = cart.checkout();
 
@@ -83,11 +94,24 @@ public class BookstoreTest {
 
 	@Test
 	public void givenThatCartHasOneCopyOfBook_WhenCustomerAddTwoCopiesOfTheSameBookToCartAndCheckout_ThenCheckoutAmountIsThreeTimesBookPrice() throws Exception {
-		cart.add(new Book("Effective Java", 40));
-		cart.add(new Book("Effective Java", 40), 2);
+		cart.add("Effective Java");
+		cart.add("Effective Java", 2);
 
 		int amount = cart.checkout();
 
 		assertThat(amount, is(equalTo(120)));
 	}
+	
+	/*
+	 * As a store supervisor
+	 * I want the ability to add book(s) to the inventory
+	 * So that customers can only add books to the cart that are in the inventory
+	 */
+	
+	@Test
+	public void givenInventoryDoesNotHaveABook_WhenCustomerAddBookToCart_ThenErrorMessageIsShownToTheUser() throws Exception {
+		expectedException.expectMessage(is(equalTo("Sorry, 'TDD in Action' not in stock!!")));
+		cart.add("TDD in Action");
+	}
+	
 }

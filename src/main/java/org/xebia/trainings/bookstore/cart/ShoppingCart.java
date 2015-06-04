@@ -7,18 +7,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.xebia.trainings.bookstore.exceptions.EmptyShoppingCartException;
+import org.xebia.trainings.bookstore.cart.exceptions.EmptyShoppingCartException;
+import org.xebia.trainings.bookstore.inventory.Inventory;
+import org.xebia.trainings.bookstore.inventory.exceptions.BookNotInInventoryException;
 import org.xebia.trainings.bookstore.model.Book;
 
 public class ShoppingCart {
 
-	private Map<Book, Integer> itemsInCart = new LinkedHashMap<>();
+	private Inventory inventory;
 
-	public void add(Book book) {
+	private Map<String, Integer> itemsInCart = new LinkedHashMap<>();
+
+	public ShoppingCart(Inventory inventory) {
+		this.inventory = inventory;
+	}
+
+	public void add(String book) {
 		add(book, 1);
 	}
 
-	public void add(Book book, int quantity) {
+	public void add(String book, int quantity) {
+		if (!inventory.exists(book)) {
+			throw new BookNotInInventoryException(book);
+		}
 		if (itemsInCart.containsKey(book)) {
 			itemsInCart.put(book, itemsInCart.get(book) + quantity);
 		} else {
@@ -31,14 +42,10 @@ public class ShoppingCart {
 			throw new EmptyShoppingCartException();
 		}
 		int checkoutAmount = 0;
-		for (Entry<Book, Integer> entry : itemsInCart.entrySet()) {
-			checkoutAmount += entry.getKey().getPrice() * entry.getValue();
+		for (Entry<String, Integer> entry : itemsInCart.entrySet()) {
+			checkoutAmount += inventory.find(entry.getKey()).getPrice() * entry.getValue();
 		}
 		return checkoutAmount;
-	}
-
-	private boolean isEmpty() {
-		return size() == 0;
 	}
 
 	public int size() {
@@ -50,7 +57,15 @@ public class ShoppingCart {
 	}
 
 	public List<Book> items() {
-		return Collections.unmodifiableList(new ArrayList<>(itemsInCart.keySet()));
+		List<Book> items = new ArrayList<>();
+		for (String title : itemsInCart.keySet()) {
+			items.add(inventory.find(title));
+		}
+		return Collections.unmodifiableList(items);
+	}
+
+	private boolean isEmpty() {
+		return size() == 0;
 	}
 
 }
